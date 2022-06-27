@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>primer/react-analyze</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="https://unpkg.com/@primer/css@^19.0.0/dist/primer.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
+
+    <script src="https://unpkg.com/prismjs@1.28.0/components/prism-core.min.js" data-manual></script>
+    <script src="https://unpkg.com/prismjs@1.28.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <link href="https://unpkg.com/prismjs@1.28.0/themes/prism.css" rel="stylesheet" />
+    <link href="https://unpkg.com/prism-themes@1.9.0/themes/prism-ghcolors.min.css" rel="stylesheet" />
+
+    <style>
+      main {
+        padding: 16px;
+      }
+      tr,
+      code {
+        font-family: 'IBM Plex Mono', monospace;
+      }
+      code {
+        font-size: 14px !important;
+      }
+      tr:focus-within {
+        background: rgba(84, 174, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="Header">
+      <div class="Header-item">
+        <a href="#" class="Header-link f4 d-flex flex-items-center">
+          <svg
+            height="32"
+            class="octicon octicon-mark-github mr-2"
+            viewBox="0 0 16 16"
+            version="1.1"
+            width="32"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+            ></path>
+          </svg>
+          <h1 class="h3">primer/react in memex</h1>
+        </a>
+      </div>
+    </div>
+    <main>
+      <nav class="UnderlineNav mt-4 mb-4">
+        <div class="UnderlineNav-body">
+          <a class="UnderlineNav-item" href="/imports.html">Imports</a>
+          <a class="UnderlineNav-item" href="/usage.html" aria-current="page">Usage</a>
+          <a class="UnderlineNav-item" href="/data.json">data.json</a>
+        </div>
+      </nav>
+
+      <table className="table">
+        <thead>
+          <tr>
+            <th>path</th>
+            <th>name</th>
+            <th>props</th>
+            <th>children</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </main>
+
+    <script>
+      fetch('data.json')
+        .then((response) => response.json())
+        .then((data) => {
+          window.table = populateUsage(data);
+
+          // TODO: lol, improve this logic
+          if (window.location.search) {
+            const query = window.location.search.split('=')[1];
+            table.search(query);
+            table.input.value = query;
+          }
+
+          table.input.addEventListener('input', (event) => {
+            window.history.replaceState(null, null, '?filter=' + event.target.value);
+          });
+
+          // syntax highlighting after tables have rendered
+          table.on('datatable.init', () => Prism.highlightAll());
+          table.on('datatable.update', () => Prism.highlightAll());
+        });
+
+      const populateUsage = (data) => {
+        const documentFragment = document.createDocumentFragment();
+
+        data.usage.forEach((item) => {
+          const pathCell = document.createElement('td');
+          pathCell.textContent = item.path + '#L' + item.line_start + '-#L' + item.line_end;
+          const nameCell = document.createElement('td');
+          nameCell.textContent = JSON.stringify({ name: item.name, type: item.type });
+          const propsCell = document.createElement('td');
+          propsCell.textContent = JSON.stringify(item.props, null, 2);
+          const childrenCell = document.createElement('td');
+          childrenCell.textContent = JSON.stringify(item.text, null, 2);
+
+          const row = document.createElement('tr');
+          row.appendChild(pathCell);
+          row.appendChild(nameCell);
+          row.appendChild(propsCell);
+          row.appendChild(childrenCell);
+          documentFragment.appendChild(row);
+        });
+
+        const tbody = document.querySelector('tbody');
+        tbody.appendChild(documentFragment);
+
+        return new simpleDatatables.DataTable('table', {
+          perPage: 25,
+          perPageSelect: [25, 100, 1000],
+          columns: [
+            {
+              select: 0,
+              render: (data) => {
+                return `<a href="https://github.com/github/memex/blob/main/${data}">${data}</a>`;
+              }
+            },
+            {
+              select: 1,
+              render: (data) => {
+                const { name, type } = JSON.parse(data);
+                if (type === 'JsxOpeningElement') {
+                  return `<a href="?filter=${name}"><span><</span>${name}<span>></span></a>`;
+                } else if (type === 'CallExpression') {
+                  return `<a href="?filter=styled(${name})">styled(${name})</a>`;
+                }
+              }
+            },
+            {
+              select: 2,
+              render: (data) => {
+                const count = data ? JSON.parse(data).length : 0;
+                if (count === 0) return '-';
+
+                return `
+                  <details>
+                    <pre><code class="language-json">${data}</code></pre>
+                    <summary>show props (${count})</summary>
+                  </details>
+                `;
+              }
+            },
+            {
+              select: 3,
+              render: (data) => {
+                return `
+                  <details>
+                    <summary>view source</summary>
+                    <pre><code class="language-tsx">${JSON.parse(data)}</code></pre>
+                  </details>
+                `;
+              }
+            }
+          ]
+        });
+      };
+    </script>
+  </body>
+</html>
