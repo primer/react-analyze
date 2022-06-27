@@ -9,8 +9,18 @@
 
 &nbsp;
 
-## Setup
+[Demo](https://memex-data-sid.vercel.app/imports.html)
+
+&nbsp;
+
+## Try it (not recommended)
 
 ```
-npm install @primer/react-scripts --save-dev
+git clone git@github.com:primer/react-analyze.git
+
+cd react-analyze && npm install
+
+cd <repo-to-analyze>
+
+node <path-to-react-analyze>/index.js src/
 ```
