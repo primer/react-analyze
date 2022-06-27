@@ -9,10 +9,6 @@
 
 &nbsp;
 
-[Demo](https://memex-data-sid.vercel.app/imports.html)
-
-&nbsp;
-
 ## Try it (not recommended)
 
 ```
